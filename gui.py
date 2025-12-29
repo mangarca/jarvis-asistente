@@ -1,50 +1,54 @@
 import streamlit as st
-import pywhatkit
-import datetime
+import urllib.parse
 
-st.set_page_config(page_title="Jarvis Mobile", page_icon="📱")
+st.set_page_config(page_title="Jarvis Web", page_icon="🤖")
 
-st.title("📱 Jarvis Móvil")
-st.write("Controla tu asistente desde la nube.")
+st.title("🤖 Jarvis Web")
+st.write("Versión segura para nube.")
 
-# Entrada de texto (simula la voz)
-comando = st.chat_input("Escribe una orden (ej: 'reproduce rock')")
+# Entrada de chat
+prompt = st.chat_input("Ej: 'reproduce rock' o 'busca gatos'")
 
-if "mensajes" not in st.session_state:
-    st.session_state.mensajes = []
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 # Mostrar historial
-for m in st.session_state.mensajes:
-    with st.chat_message(m["role"]):
-        st.write(m["content"])
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-if comando:
-    # 1. Mostrar lo que dijiste
-    st.session_state.mensajes.append({"role": "user", "content": comando})
+if prompt:
+    # 1. Mostrar tu mensaje
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.write(comando)
+        st.markdown(prompt)
 
-    # 2. Procesar respuesta
-    respuesta = ""
+    # 2. Procesar respuesta (Sin usar pywhatkit)
+    response = ""
+    link = ""
     
-    if "reproduce" in comando.lower():
-        tema = comando.lower().replace("reproduce", "")
-        respuesta = f"Abriendo {tema} en YouTube..."
-        pywhatkit.playonyt(tema) # Esto intentará abrirlo en el servidor, pero confirmamos la acción
+    texto_lower = prompt.lower()
     
-    elif "hora" in comando.lower():
-        hora = datetime.datetime.now().strftime("%H:%M")
-        respuesta = f"Son las {hora}"
+    if "reproduce" in texto_lower:
+        busqueda = texto_lower.replace("reproduce", "").strip()
+        # Creamos el link manualmente
+        query = urllib.parse.quote(busqueda)
+        link = f"https://www.youtube.com/results?search_query={query}"
+        response = f"Aquí tienes los resultados para **{busqueda}**:"
         
-    elif "busca" in comando.lower():
-        busqueda = comando.lower().replace("busca", "")
-        respuesta = f"Buscando '{busqueda}' en Google..."
-        pywhatkit.search(busqueda)
+    elif "busca" in texto_lower:
+        busqueda = texto_lower.replace("busca", "").strip()
+        query = urllib.parse.quote(busqueda)
+        link = f"https://www.google.com/search?q={query}"
+        response = f"He buscado **{busqueda}** en Google:"
         
     else:
-        respuesta = "No entendí ese comando. Intenta 'reproduce [canción]'."
+        response = "No entendí. Intenta 'reproduce [algo]' o 'busca [algo]'."
 
-    # 3. Mostrar respuesta del asistente
-    st.session_state.mensajes.append({"role": "assistant", "content": respuesta})
+    # 3. Responder con Link
+    st.session_state.messages.append({"role": "assistant", "content": response})
     with st.chat_message("assistant"):
-        st.write(respuesta)
+        st.markdown(response)
+        if link:
+            # Botón mágico para ir al sitio
+            st.link_button("👉 Abrir Resultados", link)
