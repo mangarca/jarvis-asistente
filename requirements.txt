@@ -1,3 +1,4 @@
 streamlit
 openai
-
+SpeechRecognition
+audio-recorder-streamlit
