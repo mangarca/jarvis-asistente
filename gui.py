@@ -1,22 +1,27 @@
 import streamlit as st
-from openai import OpenAI
-from gTTS import gTTS
-import os
+import sys
+import subprocess
 
-st.set_page_config(page_title="J.A.R.V.I.S.", page_icon="🔊")
+st.title("🛠️ Diagnóstico de Voz")
 
-st.title("🔊 Prueba de Voz")
-
-def hablar(texto):
-    try:
+# 1. Intentamos importar la librería
+try:
+    from gTTS import gTTS
+    st.success("✅ La librería gTTS se instaló correctamente.")
+    
+    # Prueba de audio
+    texto = st.text_input("Escribe algo para hablar:", "Hola, soy Jarvis.")
+    if st.button("🔊 Probar Voz"):
         tts = gTTS(text=texto, lang='es')
-        tts.save("audio_prueba.mp3")
-        st.audio("audio_prueba.mp3", autoplay=True)
-    except Exception as e:
-        st.error(f"Error de audio: {e}")
+        tts.save("prueba.mp3")
+        st.audio("prueba.mp3", autoplay=True)
+        
+except ImportError as e:
+    st.error(f"❌ ERROR CRÍTICO: {e}")
+    st.warning("Esto significa que la instalación falló.")
 
-prompt = st.chat_input("Escribe algo para que yo lo diga...")
-
-if prompt:
-    st.write(f"Dijiste: {prompt}")
-    hablar(prompt)
+# 2. Ver qué hay instalado realmente (Chismoso)
+st.markdown("---")
+if st.checkbox("Ver lista de instalados"):
+    result = subprocess.run([sys.executable, "-m", "pip", "freeze"], capture_output=True, text=True)
+    st.code(result.stdout)
