@@ -1,3 +1,5 @@
 streamlit
 gTTS
 openai
+SpeechRecognition
+audio-recorder-streamlit
