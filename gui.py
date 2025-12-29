@@ -1,27 +1,43 @@
 import streamlit as st
-import sys
-import subprocess
+import requests
+import urllib.parse
+from openai import OpenAI
 
-st.title("🛠️ Diagnóstico de Voz")
+# --- CONFIGURACIÓN ---
+st.set_page_config(page_title="Jarvis Voz", page_icon="🎙️")
+st.title("🎙️ J.A.R.V.I.S. | Módulo de Voz")
 
-# 1. Intentamos importar la librería
-try:
-    from gTTS import gTTS
-    st.success("✅ La librería gTTS se instaló correctamente.")
+# --- FUNCIÓN HACKER DE VOZ (Sin usar gTTS) ---
+def hablar_directo(texto):
+    if texto:
+        try:
+            # Codificamos el texto para URL (ej: "hola mundo" -> "hola%20mundo")
+            texto_safe = urllib.parse.quote(texto)
+            # Usamos la API oculta de Google Translate directamente
+            url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={texto_safe}&tl=es&client=tw-ob"
+            
+            # Descargamos el audio en memoria
+            response = requests.get(url)
+            
+            # Lo reproducimos directamente
+            st.audio(response.content, format="audio/mp3", autoplay=True)
+        except Exception as e:
+            st.error(f"Error de conexión: {e}")
+
+# --- INTERFAZ DE PRUEBA ---
+st.write("Escribe algo y presiona Enter. Jarvis lo dirá usando conexión directa.")
+
+prompt = st.chat_input("Escribe aquí para que Jarvis hable...")
+
+if prompt:
+    # Mostrar mensaje usuario
+    with st.chat_message("user"):
+        st.write(prompt)
     
-    # Prueba de audio
-    texto = st.text_input("Escribe algo para hablar:", "Hola, soy Jarvis.")
-    if st.button("🔊 Probar Voz"):
-        tts = gTTS(text=texto, lang='es')
-        tts.save("prueba.mp3")
-        st.audio("prueba.mp3", autoplay=True)
-        
-except ImportError as e:
-    st.error(f"❌ ERROR CRÍTICO: {e}")
-    st.warning("Esto significa que la instalación falló.")
-
-# 2. Ver qué hay instalado realmente (Chismoso)
-st.markdown("---")
-if st.checkbox("Ver lista de instalados"):
-    result = subprocess.run([sys.executable, "-m", "pip", "freeze"], capture_output=True, text=True)
-    st.code(result.stdout)
+    # Respuesta de Jarvis
+    respuesta = f"Dijiste: {prompt}"
+    
+    with st.chat_message("assistant"):
+        st.write(respuesta)
+        # ¡Aquí ocurre la magia!
+        hablar_directo(respuesta)
