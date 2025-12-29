@@ -1,38 +1,50 @@
 import streamlit as st
-import os
+import pywhatkit
+import datetime
 
-# Configuración de la página
-st.set_page_config(page_title="Jarvis Control", page_icon="🤖", layout="centered")
+st.set_page_config(page_title="Jarvis Mobile", page_icon="📱")
 
-st.title("🤖 Panel de Control Jarvis")
-st.write("Interfaz de mando para tu asistente personal.")
+st.title("📱 Jarvis Móvil")
+st.write("Controla tu asistente desde la nube.")
 
-# Sección de Estado
-st.info("Estado: El núcleo de voz debe ejecutarse en la terminal del PC.")
+# Entrada de texto (simula la voz)
+comando = st.chat_input("Escribe una orden (ej: 'reproduce rock')")
 
-# Sección de Comandos Manuales
-st.subheader("📝 Enviar Orden Manual")
-comando = st.text_input("Escribe una orden (ej: 'reproduce rock', 'hora'):")
+if "mensajes" not in st.session_state:
+    st.session_state.mensajes = []
 
-if st.button("Ejecutar Orden"):
-    if comando:
-        st.success(f"Enviando orden: {comando}")
-        # Aquí simulamos la ejecución. En una versión avanzada, 
-        # esto guardaría el comando en un archivo que main.py leería.
-        st.write("✅ Comando procesado (Simulación web)")
+# Mostrar historial
+for m in st.session_state.mensajes:
+    with st.chat_message(m["role"]):
+        st.write(m["content"])
+
+if comando:
+    # 1. Mostrar lo que dijiste
+    st.session_state.mensajes.append({"role": "user", "content": comando})
+    with st.chat_message("user"):
+        st.write(comando)
+
+    # 2. Procesar respuesta
+    respuesta = ""
+    
+    if "reproduce" in comando.lower():
+        tema = comando.lower().replace("reproduce", "")
+        respuesta = f"Abriendo {tema} en YouTube..."
+        pywhatkit.playonyt(tema) # Esto intentará abrirlo en el servidor, pero confirmamos la acción
+    
+    elif "hora" in comando.lower():
+        hora = datetime.datetime.now().strftime("%H:%M")
+        respuesta = f"Son las {hora}"
+        
+    elif "busca" in comando.lower():
+        busqueda = comando.lower().replace("busca", "")
+        respuesta = f"Buscando '{busqueda}' en Google..."
+        pywhatkit.search(busqueda)
+        
     else:
-        st.warning("Escribe algo primero.")
+        respuesta = "No entendí ese comando. Intenta 'reproduce [canción]'."
 
-st.markdown("---")
-st.subheader("📚 Habilidades Disponibles")
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown("**Multimedia**")
-    st.markdown("- 📺 YouTube")
-    st.markdown("- 🎵 Spotify")
-
-with col2:
-    st.markdown("**Utilidades**")
-    st.markdown("- 🔍 Google Search")
-    st.markdown("- ⏰ Hora actual")
+    # 3. Mostrar respuesta del asistente
+    st.session_state.mensajes.append({"role": "assistant", "content": respuesta})
+    with st.chat_message("assistant"):
+        st.write(respuesta)
